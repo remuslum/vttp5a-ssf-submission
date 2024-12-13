@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -13,9 +15,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
+import jakarta.json.JsonObject;
 import jakarta.validation.Valid;
 import vttp.batch5.ssf.noticeboard.components.JSONParser;
 import vttp.batch5.ssf.noticeboard.models.Notice;
+import vttp.batch5.ssf.noticeboard.repositories.NoticeRepository;
+import vttp.batch5.ssf.noticeboard.services.NoticeService;
+import vttp.batch5.ssf.noticeboard.util.MyConstants;
 
 // Use this class to write your request handlers
 @Controller
@@ -23,6 +29,15 @@ import vttp.batch5.ssf.noticeboard.models.Notice;
 public class NoticeController {
     @Autowired
     JSONParser jsonParser;
+
+    @Autowired
+    NoticeService noticeService;
+
+    @Autowired
+    NoticeRepository noticeRepository;
+
+    @Value("${rest.api.url}")
+	private String restAPIURL;
 
     @GetMapping
     public ModelAndView getLandingPage(){
@@ -49,7 +64,9 @@ public class NoticeController {
                 bindingResult.addError(error);
                 mav.setViewName("notice");
             } else {
-                System.out.println(jsonParser.parseNoticeToJSON(notice));
+                JsonObject payload = jsonParser.parseNoticeToJSON(notice);
+                ResponseEntity<String> response = noticeService.postToNoticeServer(payload, restAPIURL, "/notice");
+                noticeRepository.insertNotices(MyConstants.REDISKEY, response.getBody());
                 mav.setViewName("view2");
             }
         }

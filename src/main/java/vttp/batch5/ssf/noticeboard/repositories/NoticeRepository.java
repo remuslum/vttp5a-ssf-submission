@@ -1,7 +1,33 @@
 package vttp.batch5.ssf.noticeboard.repositories;
 
+import java.io.StringReader;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.stereotype.Repository;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+
+@Repository
 public class NoticeRepository {
 
+	@Autowired
+	@Qualifier("notice")
+	private RedisTemplate<String, Object> redisTemplate;
+
+	HashOperations<String, String, String> hashOperations;
+
+	@PostConstruct
+	public void init(){
+		redisTemplate.setHashValueSerializer(new StringRedisSerializer());
+		hashOperations = redisTemplate.opsForHash();
+	}
 	// TODO: Task 4
 	// You can change the signature of this method by adding any number of parameters
 	// and return any type
@@ -14,8 +40,13 @@ public class NoticeRepository {
 	 *
 	 *
 	 */
-	public void insertNotices() {
+	public void insertNotices(String redisKey, String responseBody) {
+		JsonObject jsonObject = Json.createReader(new StringReader(responseBody)).readObject();
+		Set<String> keys = jsonObject.keySet();
 
+		for(String key:keys){
+			hashOperations.put(redisKey, key, jsonObject.get(key).toString());
+		}
 	}
 
 
