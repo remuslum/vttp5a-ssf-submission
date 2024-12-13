@@ -37,7 +37,8 @@ public class NoticeRepository {
 	 * redis-cli command 
 	 * 	hdel myhashmap a_key
 	 *
-	 *
+	 * My command:
+	 *	redis-cli -n 1 hmset notice 01JEZ8BXJHV6W21CEGPC7FEA7M {"id":"01JEZ8BXJHV6W21CEGPC7FEA7M","timestamp":1734068270673}
 	 */
 	public void insertNotices(String redisKey, String responseBody) {
 		// Save responseBody as a JSON String

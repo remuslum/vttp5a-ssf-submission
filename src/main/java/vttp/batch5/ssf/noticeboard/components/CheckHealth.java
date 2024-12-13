@@ -11,6 +11,9 @@ public class CheckHealth {
     @Qualifier("notice")
     private RedisTemplate<String, Object> redisTemplate;
 
+    /* My command:
+	 *	redis-cli -n 1 randomkey
+     */ 
     public boolean isAppHealthy(){
         try {
             redisTemplate.randomKey();
