@@ -24,7 +24,7 @@ public class JSONParser {
         JsonArray categoriesArray = categoriesArrayBuilder.build();
 
         JsonObject jsonObject= Json.createObjectBuilder().add("title", notice.getTitle()).add("poster",notice.getPoster())
-        .add("postDate", dateInLong).add("categories", categoriesArray)
+        .add("postDate",dateInLong).add("categories", categoriesArray)
         .add("text", notice.getText()).build();
 
         return jsonObject;

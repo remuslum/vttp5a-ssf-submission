@@ -1,5 +1,6 @@
 package vttp.batch5.ssf.noticeboard.controllers;
 
+import java.io.StringReader;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
@@ -13,15 +14,17 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import jakarta.validation.Valid;
+import vttp.batch5.ssf.noticeboard.components.CheckHealth;
 import vttp.batch5.ssf.noticeboard.components.JSONParser;
 import vttp.batch5.ssf.noticeboard.models.Notice;
-import vttp.batch5.ssf.noticeboard.repositories.NoticeRepository;
 import vttp.batch5.ssf.noticeboard.services.NoticeService;
-import vttp.batch5.ssf.noticeboard.util.MyConstants;
+
 
 // Use this class to write your request handlers
 @Controller
@@ -34,7 +37,7 @@ public class NoticeController {
     NoticeService noticeService;
 
     @Autowired
-    NoticeRepository noticeRepository;
+    CheckHealth checkHealth;
 
     @Value("${rest.api.url}")
 	private String restAPIURL;
@@ -65,11 +68,31 @@ public class NoticeController {
                 mav.setViewName("notice");
             } else {
                 JsonObject payload = jsonParser.parseNoticeToJSON(notice);
-                ResponseEntity<String> response = noticeService.postToNoticeServer(payload, restAPIURL, "/notice");
-                noticeRepository.insertNotices(MyConstants.REDISKEY, response.getBody());
-                mav.setViewName("view2");
+                String responseBody = noticeService.postToNoticeServer(payload, restAPIURL, "/notice");
+                JsonObject jsonObject = Json.createReader(new StringReader(responseBody)).readObject();
+
+                if(jsonObject.keySet().contains("message")){
+                    mav.addObject("error", jsonObject.getString("message"));
+                    mav.setViewName("view3");
+                } else {
+                    mav.addObject("id", jsonObject.getString("id"));
+                    mav.setViewName("view2");
+                }
+                
             }
         }
         return mav;
     }
+
+    @GetMapping(path = "/status", produces="application/json")
+    @ResponseBody
+    public ResponseEntity<String> checkHealth() {
+        JsonObject jsonObject = Json.createObjectBuilder().build();
+        if(checkHealth.isAppHealthy()){
+            return ResponseEntity.status(200).body(jsonObject.toString());
+        } else {
+            return ResponseEntity.status(503).body(jsonObject.toString());
+        }
+    }
 }
+    

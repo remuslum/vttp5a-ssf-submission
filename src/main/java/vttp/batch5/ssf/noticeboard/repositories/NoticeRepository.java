@@ -1,7 +1,6 @@
 package vttp.batch5.ssf.noticeboard.repositories;
 
 import java.io.StringReader;
-import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -41,12 +40,9 @@ public class NoticeRepository {
 	 *
 	 */
 	public void insertNotices(String redisKey, String responseBody) {
+		// Save responseBody as a JSON String
 		JsonObject jsonObject = Json.createReader(new StringReader(responseBody)).readObject();
-		Set<String> keys = jsonObject.keySet();
-
-		for(String key:keys){
-			hashOperations.put(redisKey, key, jsonObject.get(key).toString());
-		}
+		hashOperations.put(redisKey, jsonObject.getString("id"), jsonObject.toString());
 	}
 
 
