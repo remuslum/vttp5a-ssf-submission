@@ -1,5 +1,7 @@
 package vttp.batch5.ssf.noticeboard.components;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -15,18 +17,22 @@ public class JSONParser {
     LocalDateConverter localDateConverter;
 
     public JsonObject parseNoticeToJSON(Notice notice){
-        // Chnange LocalDate to Long
+        // Change LocalDate to Long
         Long dateInLong = localDateConverter.convertStringDateToLong(notice.getPostDate().toString());
 
-        // Store categories in JSONArray
-        JsonArrayBuilder categoriesArrayBuilder = Json.createArrayBuilder();
-        notice.getCategories().forEach(x -> categoriesArrayBuilder.add(x));
-        JsonArray categoriesArray = categoriesArrayBuilder.build();
+        // Change categories to JsonArray
+        JsonArray categoriesArray = convertCategoriesToJSON(notice.getCategories());
 
         JsonObject jsonObject= Json.createObjectBuilder().add("title", notice.getTitle()).add("poster",notice.getPoster())
         .add("postDate",dateInLong).add("categories", categoriesArray)
         .add("text", notice.getText()).build();
 
         return jsonObject;
+    }
+
+    private JsonArray convertCategoriesToJSON(List<String> categories){
+        JsonArrayBuilder categoriesArrayBuilder = Json.createArrayBuilder();
+        categories.forEach(x -> categoriesArrayBuilder.add(x));
+        return categoriesArrayBuilder.build();
     }
 }

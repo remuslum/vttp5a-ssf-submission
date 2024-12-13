@@ -26,6 +26,6 @@ ENV PORT=8080
 
 EXPOSE ${PORT}
 
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD curl -s -f http://localhost:${PORT}/status || exit 1
+HEALTHCHECK --interval=60s --start-period=120s CMD curl -s -f http://localhost:${PORT}/status || exit 1
 
 ENTRYPOINT SERVER_PORT=${PORT} java -jar vttp5a-ssf-assessment-app.jar

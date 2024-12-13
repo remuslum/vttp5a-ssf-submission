@@ -1,11 +1,9 @@
 package vttp.batch5.ssf.noticeboard.controllers;
 
-import java.io.StringReader;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
@@ -21,7 +19,6 @@ import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import jakarta.validation.Valid;
 import vttp.batch5.ssf.noticeboard.components.CheckHealth;
-import vttp.batch5.ssf.noticeboard.components.JSONParser;
 import vttp.batch5.ssf.noticeboard.models.Notice;
 import vttp.batch5.ssf.noticeboard.services.NoticeService;
 
@@ -31,16 +28,10 @@ import vttp.batch5.ssf.noticeboard.services.NoticeService;
 @RequestMapping
 public class NoticeController {
     @Autowired
-    JSONParser jsonParser;
-
-    @Autowired
     NoticeService noticeService;
 
     @Autowired
     CheckHealth checkHealth;
-
-    @Value("${rest.api.url}")
-	private String restAPIURL;
 
     @GetMapping
     public ModelAndView getLandingPage(){
@@ -56,29 +47,27 @@ public class NoticeController {
         if(bindingResult.hasErrors()){
             mav.setViewName("notice");
         } else {
-            //Check if categories are empty
+            // Check if categories are empty
             if(notice.getCategories().isEmpty()){
                 FieldError error = new FieldError("notice", "categories", "There must be at least one category selected");
                 bindingResult.addError(error);
                 mav.setViewName("notice");
-            //Check if postDate is in the past
+            // Check if postDate is in the past
             } else if (ChronoUnit.DAYS.between(LocalDate.now(), notice.getPostDate()) < 0){
                 FieldError error = new FieldError("notice", "postDate", "Post Date cannot be in the past");
                 bindingResult.addError(error);
                 mav.setViewName("notice");
+            // Check if request sent to API was successful or not
             } else {
-                JsonObject payload = jsonParser.parseNoticeToJSON(notice);
-                String responseBody = noticeService.postToNoticeServer(payload, restAPIURL, "/notice");
-                JsonObject jsonObject = Json.createReader(new StringReader(responseBody)).readObject();
-
+                JsonObject jsonObject = noticeService.postToNoticeServer(notice);
+                // Unsuccessful requests has the key message in the response
                 if(jsonObject.keySet().contains("message")){
                     mav.addObject("error", jsonObject.getString("message"));
                     mav.setViewName("view3");
                 } else {
                     mav.addObject("id", jsonObject.getString("id"));
                     mav.setViewName("view2");
-                }
-                
+                }  
             }
         }
         return mav;
